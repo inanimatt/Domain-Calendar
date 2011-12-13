@@ -33,6 +33,7 @@ if ($version != $current_version)
   $domainTable = $toSchema->createTable('domains');
   $domainTable->addColumn('id', 'integer', array('unsigned' => true));
   $domainTable->addColumn('domain_name', 'string', array('length' => 253));
+  $domainTable->addColumn('expires', 'date', array('notnull' => false));
   $domainTable->setPrimaryKey(array('id'));
   $domainTable->addUniqueIndex(array('domain_name'));
 
