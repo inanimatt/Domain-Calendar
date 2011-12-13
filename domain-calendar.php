@@ -211,18 +211,25 @@ END:VCALENDAR
       $event_template = 'BEGIN:VEVENT
 UID:{uid}
 DTSTAMP:{dtstamp}
-ORGANIZER;{organiser}
 DTSTART:{start}
 DTEND:{end}
 SUMMARY:{summary}
+BEGIN:VALARM
+TRIGGER;VALUE=DATE-TIME:{reminder}
+ACTION:DISPLAY
+DESCRIPTION:{summary}
+END:VALARM
 END:VEVENT
 ';
       
       $events = array();
       foreach($results as $idx => $r)
       {
-
+        $expiry = date_create($r['expires'], new DateTimeZone('UTC'));
+        
         $reminder = date_create_from_format('Y-m-d', $r['expires']);
+        $reminder->setTimeZone(new DateTimeZone('UTC'));
+        
         if (!$reminder)
         {
           $output->writeln(sprintf('<error>Unable to parse expiry date for domain %s. Skipping.</error>', $r['domain_name']));
@@ -246,7 +253,7 @@ END:VEVENT
           
           $reminder->modify(sprintf('%s', $input->getOption('time')));
         }
-        $reminder->setTimeZone(new DateTimeZone('UTC'));
+
         
         
         $output->writeln(sprintf('Domain %s expires %s, setting reminder for %s', $r['domain_name'], $r['expires'], $reminder->format('Y-m-d H:i T')));
@@ -255,10 +262,10 @@ END:VEVENT
         $event_data = array(
           '{uid}'       => sprintf('uid%d@%s', $idx, $r['domain_name']),
           '{dtstamp}'   => date_create()->format('Ymd\THis\Z'),
-          '{organiser}' => 'CN=Domain Calendar:MAILTO:domaincalendar@localhost',
-          '{start}'     => $reminder->format('Ymd\THis\Z'),
-          '{end}'       => $reminder->format('Ymd\THis\Z'),
-          '{summary}'   => sprintf('Renew domain %s', $r['domain_name']),
+          '{start}'     => $expiry->format('Ymd\THis\Z'),
+          '{end}'       => $expiry->format('Ymd\THis\Z'),
+          '{summary}'   => sprintf('Domain %s expires on %s', $r['domain_name'], $expiry->format('l jS F')),
+          '{reminder}'  => $reminder->format('Ymd\THis\Z'),
         );
         
         $events[] = strtr($event_template, $event_data);
