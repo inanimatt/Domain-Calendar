@@ -18,7 +18,7 @@ Installation
 This project uses Composer to track and manage project dependencies. However Composer doesn't yet handle the download of single files and archives, so there are a couple of additional steps required for now:
 
 * Download the [Silex](http://silex.sensiolabs.org/get/silex.phar) micro-framework and put it in the `vendor` directory
-* Download [PHPWhois](http://sourceforge.net/projects/phpwhois/files/phpwhois/) and unpack it in the `vendor` directory
+* Download [PHPWhois](http://sourceforge.net/projects/phpwhois/files/phpwhois/) and unpack it into the `vendor/phpwhois` directory
 * Download the [Composer](http://getcomposer.org/composer.phar) package manager and put it in the `vendor` directory
 * Run `php vendor/composer.phar install`
 * Make sure the `data` directory is writeable by your username
@@ -27,19 +27,23 @@ Usage
 -----
 
 **Add a domain**
-`domain-calendar domain:add example.com`
+`./domain-calendar domain:add example.com`
 
 **Remove a domain**
-`domain-calendar domain:remove example.com`
+`./domain-calendar domain:remove example.com`
 
 **List domains**
-`domain-calendar domain:list`
+`./domain-calendar domain:list`
+
+Show stored domain names and cached expiry dates.
 
 **Refresh expiry information**
-`domain-calendar domain:refresh-all`
+`./domain-calendar domain:refresh-all`
+
+Checks for updated information on all domain names with past expiry dates. Add `--force-all` to check all stored domain names instead.
 
 **Generate calendar**
-`domain-calendar calendar:generate --months=2 --days=5 [filename.ics]`
+`./domain-calendar calendar:generate --months=2 --days=5 [filename.ics]`
 
 If you don't supply the month or day options, the calendar file is generated without reminders. 
 If you don't supply a filename, the calendar is saved in `data/domains.ics`
@@ -51,4 +55,4 @@ TODO
 * Abstract command code into one or more services
 * Web UI?
 * Test suite!
-
+* Don't migrate DB schema automatically: throw an exception then provide a console command to display potential data-loss warning and handle migration (`./domain-calendar database:upgrade --force` -- also `database:dump`?)
