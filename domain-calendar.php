@@ -166,4 +166,109 @@ $console->register('domain:refresh-all')
     }
   );
 
+$console->register('calendar:generate')
+  ->setDefinition( array(
+      new InputOption('months', null, InputOption::VALUE_OPTIONAL, 'Remind n months before expiry', 0),
+      new InputOption('days', null, InputOption::VALUE_OPTIONAL, 'Remind n days before expiry', 7),
+      new InputOption('time', null, InputOption::VALUE_OPTIONAL, 'Time for the reminder in 24hr format (e.g. 14:00)', '14:00'),
+      new InputArgument('filename', InputArgument::OPTIONAL, 'Output filename', __DIR__.'/data/domain_calendar.ics'),
+    ) )
+  ->setDescription('Generate a calendar file')
+  ->setHelp('Usage: <info>./domain-calendar.php calendar:generate [filename]</info>
+  
+The default reminder is at 14:00, 7 days before expiry, in your 
+PHP-configured timezone.
+
+Use the --months= --days= and --time= options to change the reminders
+in the calendar file. You can combine these, for example:
+
+./domain-calendar.php calendar:generate --months=1 --days=3 --time=14:00
+
+If you don\'t specify a filename, the calendar will be output to STDOUT.
+  ')
+  ->setCode(
+    function(InputInterface $input, OutputInterface $output) use ($app)
+    {
+      
+      $output->writeln('Fetching domains...');
+      
+      try {
+        $results = $app['db']->fetchAll('SELECT domain_name, expires FROM domains WHERE expires > ? ORDER BY domain_name', array(date_create()->format('Y-m-d')));
+      }
+      catch (Exception $e)
+      {
+        $output->writeln(sprintf('<error>Unexpected error: %s</error>', $e->getMessage()));  
+      }
+      
+      
+      $calendar_template = 'BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//inanimatt.com/DomainCalendar//NONSGML v1.0//EN
+{events}
+END:VCALENDAR
+';
+      
+      $event_template = 'BEGIN:VEVENT
+UID:{uid}
+DTSTAMP:{dtstamp}
+ORGANIZER;{organiser}
+DTSTART:{start}
+DTEND:{end}
+SUMMARY:{summary}
+END:VEVENT
+';
+      
+      $events = array();
+      foreach($results as $idx => $r)
+      {
+
+        $reminder = date_create_from_format('Y-m-d', $r['expires']);
+        if (!$reminder)
+        {
+          $output->writeln(sprintf('<error>Unable to parse expiry date for domain %s. Skipping.</error>', $r['domain_name']));
+        }
+        
+        if ($input->getOption('months'))
+        {
+          $reminder->modify(sprintf('-%d months', $input->getOption('months')));
+        }
+        if ($input->getOption('days'))
+        {
+          $reminder->modify(sprintf('-%d days', $input->getOption('days')));
+        }
+        if ($input->getOption('time'))
+        {
+          if (!preg_match('/^[0-2][0-9]:[0-5][0-9]$/', $input->getOption('time')))
+          {
+            $output->writeln('<error>Invalid reminder time given</error>');
+            exit;
+          }
+          
+          $reminder->modify(sprintf('%s', $input->getOption('time')));
+        }
+        $reminder->setTimeZone(new DateTimeZone('UTC'));
+        
+        
+        $output->writeln(sprintf('Domain %s expires %s, setting reminder for %s', $r['domain_name'], $r['expires'], $reminder->format('Y-m-d H:i T')));
+        
+        
+        $event_data = array(
+          '{uid}'       => sprintf('uid%d@%s', $idx, $r['domain_name']),
+          '{dtstamp}'   => date_create()->format('Ymd\THis\Z'),
+          '{organiser}' => 'CN=Domain Calendar:MAILTO:domaincalendar@localhost',
+          '{start}'     => $reminder->format('Ymd\THis\Z'),
+          '{end}'       => $reminder->format('Ymd\THis\Z'),
+          '{summary}'   => sprintf('Renew domain %s', $r['domain_name']),
+        );
+        
+        $events[] = strtr($event_template, $event_data);
+      }
+      
+      $calendar = strtr($calendar_template, array('{events}' => join($events, PHP_EOL)));
+      
+      print_r($calendar);
+
+    }
+  );
+
 $console->run();
