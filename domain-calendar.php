@@ -12,25 +12,89 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 $console = new Application('DomainCalendar', '1.0.0');
 
-$console->register('hello-world')
+$console->register('domain:add')
   ->setDefinition( array(
-     //Create a "--test" optional parameter
-     new InputOption('test', '', InputOption::VALUE_NONE, 'Test mode'),
+      new InputArgument('domain', InputArgument::REQUIRED, 'Fully qualified domain name'),
     ) )
-  ->setDescription('Say hello')
-  ->setHelp('Usage: <info>./domain-calendar.php hello-world [--test]</info>')
+  ->setDescription('Add a domain to the database')
+  ->setHelp('Usage: <info>./domain-calendar.php domain:add domain</info>')
   ->setCode(
     function(InputInterface $input, OutputInterface $output) use ($app)
     {
-      if ($input->getOption('test'))
-      {
-        $output->write("\n\tTest Mode Enabled\n\n");
-      }
+      
+      $domain = $input->getArgument('domain');
 
-      $output->write( "Hello World\n");
-      //Do work here
-      //Example:
-      //  $app[ 'myExtension' ]->doStuff();
+      $output->writeln(sprintf('Adding domain %s', $domain));
+
+      try {
+        $app['db']->executeQuery('INSERT INTO domains (domain_name) VALUES (?)', array($domain));
+      } 
+      catch (Exception $e)
+      {
+        if ($e->getMessage() == 'SQLSTATE[23000]: Integrity constraint violation: 19 column domain_name is not unique')
+        {
+          $output->writeln('<error>Failed: domain already in database</error>');
+        } 
+        else 
+        {
+          $output->writeln(sprintf('<error>Unexpected error: %s</error>', $e->getMessage()));  
+        }
+        
+        
+      }
+      
+    }
+  );
+
+$console->register('domain:remove')
+  ->setDefinition( array(
+      new InputArgument('domain', InputArgument::REQUIRED, 'Fully qualified domain name'),
+    ) )
+  ->setDescription('Remove domain from the database')
+  ->setHelp('Usage: <info>./domain-calendar.php domain:remove domain</info>')
+  ->setCode(
+    function(InputInterface $input, OutputInterface $output) use ($app)
+    {
+      
+      $domain = $input->getArgument('domain');
+
+      $output->writeln(sprintf('Removing domain %s', $domain));
+
+      try {
+        $app['db']->executeQuery('DELETE FROM domains WHERE domain_name = ?', array($domain));
+      } 
+      catch (Exception $e)
+      {
+        $output->writeln(sprintf('<error>Unexpected error: %s</error>', $e->getMessage()));  
+      }
+      
+    }
+  );
+
+$console->register('domain:list')
+  ->setDefinition( array(
+    ) )
+  ->setDescription('List domains')
+  ->setHelp('Usage: <info>./domain-calendar.php domain:list</info>')
+  ->setCode(
+    function(InputInterface $input, OutputInterface $output) use ($app)
+    {
+      
+      $output->writeln('Domains:');
+
+      try {
+        $domains = $app['db']->fetchAll('SELECT domain_name FROM domains ORDER BY domain_name');
+      } 
+      catch (Exception $e)
+      {
+        $output->writeln(sprintf('<error>Unexpected error: %s</error>', $e->getMessage()));  
+      }
+      
+      foreach($domains as $d)
+      {
+        $output->writeln("\t".$d['domain_name']);
+      }
+      
     }
   );
 
