@@ -56,3 +56,4 @@ TODO
 * Web UI?
 * Test suite!
 * Don't migrate DB schema automatically: throw an exception then provide a console command to display potential data-loss warning and handle migration (`./domain-calendar database:upgrade --force` -- also `database:dump`?)
+* Generate a single reminder for multiple domains expiring the same day
