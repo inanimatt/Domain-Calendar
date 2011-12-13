@@ -171,7 +171,7 @@ $console->register('calendar:generate')
       new InputOption('months', null, InputOption::VALUE_OPTIONAL, 'Remind n months before expiry', 0),
       new InputOption('days', null, InputOption::VALUE_OPTIONAL, 'Remind n days before expiry', 7),
       new InputOption('time', null, InputOption::VALUE_OPTIONAL, 'Time for the reminder in 24hr format (e.g. 14:00)', '14:00'),
-      new InputArgument('filename', InputArgument::OPTIONAL, 'Output filename', __DIR__.'/data/domain_calendar.ics'),
+      new InputArgument('filename', InputArgument::OPTIONAL, 'Output filename', 'php://stdout'),
     ) )
   ->setDescription('Generate a calendar file')
   ->setHelp('Usage: <info>./domain-calendar.php calendar:generate [filename]</info>
@@ -266,7 +266,8 @@ END:VEVENT
       
       $calendar = strtr($calendar_template, array('{events}' => join($events, PHP_EOL)));
       
-      print_r($calendar);
+      $output->writeln('Saving calendar file');
+      file_put_contents($input->getArgument('filename'), $calendar);
 
     }
   );
