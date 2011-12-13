@@ -1,8 +1,8 @@
 <?php
 
-if (!is_file(__DIR__.'/domain_calendar.db'))
+if (!is_file(__DIR__.'/../data/domain_calendar.db'))
 {
-  touch(__DIR__.'/domain_calendar.db');
+  touch(__DIR__.'/../data/domain_calendar.db');
 }
 
 try {

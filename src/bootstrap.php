@@ -10,7 +10,7 @@ $app['debug'] = true;
 $app->register(new Silex\Provider\DoctrineServiceProvider(), array(
     'db.options'            => array(
         'driver'    => 'pdo_sqlite',
-        'path'      => __DIR__.'/domain_calendar.db',
+        'path'      => __DIR__.'/../data/domain_calendar.db',
     ),
     'db.dbal.class_path'    => __DIR__.'/../vendor/doctrine/dbal/lib',
     'db.common.class_path'  => __DIR__.'/../vendor/doctrine/common/lib',
