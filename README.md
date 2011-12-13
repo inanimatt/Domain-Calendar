@@ -43,10 +43,17 @@ Show stored domain names and cached expiry dates.
 Checks for updated information on all domain names with past expiry dates. Add `--force-all` to check all stored domain names instead.
 
 **Generate calendar**
-`./domain-calendar calendar:generate --months=2 --days=5 [filename.ics]`
+`./domain-calendar calendar:generate --months=2 --days=5 --time=14:00 [filename.ics]`
 
-If you don't supply the month or day options, the calendar file is generated without reminders. 
-If you don't supply a filename, the calendar is saved in `data/domains.ics`
+If you don't supply the month or day options, the calendar file is generated with reminders at 2pm, 7 days before expiry.
+
+If you don't supply a filename, the calendar is output to STDOUT
+
+
+Unattended/scheduled usage
+--------------------------
+
+You can quell all non-error output from the above commands by adding the `--quiet` option, which makes it possible to use in a cronjob.
 
 
 TODO
