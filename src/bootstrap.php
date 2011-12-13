@@ -2,6 +2,8 @@
 
 require __DIR__.'/../vendor/silex.phar';
 
+require __DIR__.'/../vendor/phpwhois/whois.main.php';
+
 $app = new Silex\Application();
 $app['debug'] = true;
 
@@ -16,6 +18,7 @@ $app->register(new Silex\Provider\DoctrineServiceProvider(), array(
     'db.common.class_path'  => __DIR__.'/../vendor/doctrine/common/lib',
 ));
 
+$app['whois'] = new Whois();
 
 $app['autoloader']->registerNamespace('Symfony', __DIR__ . '/../vendor/symfony/console');
 

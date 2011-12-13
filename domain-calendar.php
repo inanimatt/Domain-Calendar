@@ -24,10 +24,21 @@ $console->register('domain:add')
       
       $domain = $input->getArgument('domain');
 
+      $output->writeln('Requesting expiry date');
+      $result = $app['whois']->Lookup($domain);
+      
+      if (!is_array($result) || !isset($result['regrinfo']) || !isset($result['regrinfo']['domain']) || !isset($result['regrinfo']['domain']['expires']))
+      {
+        $output->writeln('<error>Error requesting WHOIS record. Skipping.</error>');
+        exit;
+      }
+
+      $expiry = new DateTime($result['regrinfo']['domain']['expires']);
+
       $output->writeln(sprintf('Adding domain %s', $domain));
 
       try {
-        $app['db']->executeQuery('INSERT INTO domains (domain_name) VALUES (?)', array($domain));
+        $app['db']->executeQuery('INSERT INTO domains (domain_name, expires) VALUES (?, ?)', array($domain, $expiry->format('Y-m-d')));
       } 
       catch (Exception $e)
       {
@@ -83,7 +94,7 @@ $console->register('domain:list')
       $output->writeln('Domains:');
 
       try {
-        $domains = $app['db']->fetchAll('SELECT domain_name FROM domains ORDER BY domain_name');
+        $domains = $app['db']->fetchAll('SELECT domain_name, expires FROM domains ORDER BY domain_name');
       } 
       catch (Exception $e)
       {
@@ -92,9 +103,66 @@ $console->register('domain:list')
       
       foreach($domains as $d)
       {
-        $output->writeln("\t".$d['domain_name']);
+        $output->writeln(sprintf("%s\t%s", date_create($d['expires'])->format('Y-m-d'), $d['domain_name']));
       }
       
+    }
+  );
+
+$console->register('domain:refresh-all')
+  ->setDefinition( array(
+      new InputOption('force-all', null, InputOption::VALUE_NONE, 'Don\'t skip cached domains with expiry dates in the future'),
+    ) )
+  ->setDescription('Update expiry info on all domain names')
+  ->setHelp('Usage: <info>./domain-calendar.php domain:refresh-all</info>')
+  ->setCode(
+    function(InputInterface $input, OutputInterface $output) use ($app)
+    {
+      
+      $output->writeln('Fetching domains...');
+      
+      try {
+        $results = $app['db']->fetchAll('SELECT domain_name, expires FROM domains ORDER BY domain_name');
+      }
+      catch (Exception $e)
+      {
+        $output->writeln(sprintf('<error>Unexpected error: %s</error>', $e->getMessage()));  
+      }
+      
+      foreach($results as $row)
+      {
+        $output->write(sprintf('%s: ', $row['domain_name']));
+        
+        if ($row['expires'] && (date_create($row['expires'])->format('U') > time()) && !$input->getOption('force-all'))
+        {
+          $output->writeln(sprintf('%s (cached, skipping)', $row['expires']));
+          continue;
+        }
+
+        $result = $app['whois']->Lookup($row['domain_name']);
+        
+        if (!is_array($result) || !isset($result['regrinfo']) || !isset($result['regrinfo']['domain']) || !isset($result['regrinfo']['domain']['expires']))
+        {
+          $output->writeln('<error>Error requesting WHOIS record. Skipping.</error>');
+          continue;
+        }
+
+        $expiry = new DateTime($result['regrinfo']['domain']['expires']);
+        
+        $output->writeln($expiry->format('Y-m-d'));
+        
+        try {
+          $app['db']->executeQuery('UPDATE domains SET expires = ? WHERE domain_name = ?', array($expiry->format('Y-m-d'), $row['domain_name']));
+        }
+        catch (Exception $e)
+        {
+          $output->writeln(sprintf('<error>Unexpected error: %s</error>', $e->getMessage()));  
+        }
+        
+      }
+
+      $output->writeln('Done');
+  
     }
   );
 
