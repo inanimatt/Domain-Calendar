@@ -1,1 +1,1 @@
-[{"package":"twig\/twig","version":"1.4.0"},{"package":"symfony\/twig-bridge","version":"2.1.0-dev"}]
+[{"package":"twig\/twig","version":"1.4.0"},{"package":"symfony\/twig-bridge","version":"2.1.0-dev"},{"package":"doctrine\/common","version":"2.2.0BETA2"},{"package":"doctrine\/dbal","version":"2.1.x-dev"}]
