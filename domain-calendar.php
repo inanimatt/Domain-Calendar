@@ -9,6 +9,8 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use Inanimatt\DomainCalendarException;
+
 
 $console = new Application('DomainCalendar', '1.0.0');
 
@@ -23,35 +25,16 @@ $console->register('domain:add')
     {
       
       $domain = $input->getArgument('domain');
-
-      $output->writeln('Requesting expiry date');
-      $result = $app['whois']->Lookup($domain);
       
-      if (!is_array($result) || !isset($result['regrinfo']) || !isset($result['regrinfo']['domain']) || !isset($result['regrinfo']['domain']['expires']))
-      {
-        $output->writeln('<error>Error requesting WHOIS record. Skipping.</error>');
-        exit;
-      }
-
-      $expiry = new DateTime($result['regrinfo']['domain']['expires']);
-
       $output->writeln(sprintf('Adding domain %s', $domain));
-
+      
       try {
-        $app['db']->executeQuery('INSERT INTO domains (domain_name, expires) VALUES (?, ?)', array($domain, $expiry->format('Y-m-d')));
+        $app['domain_calendar']->add($domain);
       } 
       catch (Exception $e)
       {
-        if ($e->getMessage() == 'SQLSTATE[23000]: Integrity constraint violation: 19 column domain_name is not unique')
-        {
-          $output->writeln('<error>Failed: domain already in database</error>');
-        } 
-        else 
-        {
-          $output->writeln(sprintf('<error>Unexpected error: %s</error>', $e->getMessage()));  
-        }
-        
-        
+        $output->writeln(sprintf('<error>%s (%s)</error>', $e->getMessage(), get_class($e)));
+        exit;
       }
       
     }
