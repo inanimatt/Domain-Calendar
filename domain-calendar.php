@@ -55,11 +55,11 @@ $console->register('domain:remove')
       $output->writeln(sprintf('Removing domain %s', $domain));
 
       try {
-        $app['db']->executeQuery('DELETE FROM domains WHERE domain_name = ?', array($domain));
+        $app['domain_calendar']->remove($domain);
       } 
       catch (Exception $e)
       {
-        $output->writeln(sprintf('<error>Unexpected error: %s</error>', $e->getMessage()));  
+        $output->writeln(sprintf('<error>%s (%s)</error>', $e->getMessage(), get_class($e)));
       }
       
     }
@@ -77,11 +77,11 @@ $console->register('domain:list')
       $output->writeln('Domains:');
 
       try {
-        $domains = $app['db']->fetchAll('SELECT domain_name, expires FROM domains ORDER BY domain_name');
+        $domains = $app['domain_calendar']->findAll();
       } 
       catch (Exception $e)
       {
-        $output->writeln(sprintf('<error>Unexpected error: %s</error>', $e->getMessage()));  
+        $output->writeln(sprintf('<error>%s (%s)</error>', $e->getMessage(), get_class($e)));
       }
       
       foreach($domains as $d)
@@ -102,49 +102,17 @@ $console->register('domain:refresh-all')
     function(InputInterface $input, OutputInterface $output) use ($app)
     {
       
-      $output->writeln('Fetching domains...');
+      $output->writeln('Refreshing domain expiry dates');
       
       try {
-        $results = $app['db']->fetchAll('SELECT domain_name, expires FROM domains ORDER BY domain_name');
+        $results = $app['domain_calendar']->refresh($input->getOption('force-all'));
       }
       catch (Exception $e)
       {
-        $output->writeln(sprintf('<error>Unexpected error: %s</error>', $e->getMessage()));  
+        $output->writeln(sprintf('<error>%s (%s)</error>', $e->getMessage(), get_class($e)));
       }
       
-      foreach($results as $row)
-      {
-        $output->write(sprintf('%s: ', $row['domain_name']));
-        
-        if ($row['expires'] && (date_create($row['expires'])->format('U') > time()) && !$input->getOption('force-all'))
-        {
-          $output->writeln(sprintf('%s (cached, skipping)', $row['expires']));
-          continue;
-        }
-
-        $result = $app['whois']->Lookup($row['domain_name']);
-        
-        if (!is_array($result) || !isset($result['regrinfo']) || !isset($result['regrinfo']['domain']) || !isset($result['regrinfo']['domain']['expires']))
-        {
-          $output->writeln('<error>Error requesting WHOIS record. Skipping.</error>');
-          continue;
-        }
-
-        $expiry = new DateTime($result['regrinfo']['domain']['expires']);
-        
-        $output->writeln($expiry->format('Y-m-d'));
-        
-        try {
-          $app['db']->executeQuery('UPDATE domains SET expires = ? WHERE domain_name = ?', array($expiry->format('Y-m-d'), $row['domain_name']));
-        }
-        catch (Exception $e)
-        {
-          $output->writeln(sprintf('<error>Unexpected error: %s</error>', $e->getMessage()));  
-        }
-        
-      }
-
-      $output->writeln('Done');
+      $output->writeln(join($results, PHP_EOL));
   
     }
   );
@@ -173,88 +141,9 @@ If you don\'t specify a filename, the calendar will be output to STDOUT.
     function(InputInterface $input, OutputInterface $output) use ($app)
     {
       
-      $output->writeln('Fetching domains...');
+      $output->writeln('Generating calendar');
       
-      try {
-        $results = $app['db']->fetchAll('SELECT domain_name, expires FROM domains WHERE expires > ? ORDER BY domain_name', array(date_create()->format('Y-m-d')));
-      }
-      catch (Exception $e)
-      {
-        $output->writeln(sprintf('<error>Unexpected error: %s</error>', $e->getMessage()));  
-      }
-      
-      
-      $calendar_template = 'BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//inanimatt.com/DomainCalendar//NONSGML v1.0//EN
-{events}
-END:VCALENDAR
-';
-      
-      $event_template = 'BEGIN:VEVENT
-UID:{uid}
-DTSTAMP:{dtstamp}
-DTSTART:{start}
-DTEND:{end}
-SUMMARY:{summary}
-BEGIN:VALARM
-TRIGGER;VALUE=DATE-TIME:{reminder}
-ACTION:DISPLAY
-DESCRIPTION:{summary}
-END:VALARM
-END:VEVENT
-';
-      
-      $events = array();
-      foreach($results as $idx => $r)
-      {
-        $expiry = date_create($r['expires'], new DateTimeZone('UTC'));
-        
-        $reminder = date_create_from_format('Y-m-d', $r['expires']);
-        $reminder->setTimeZone(new DateTimeZone('UTC'));
-        
-        if (!$reminder)
-        {
-          $output->writeln(sprintf('<error>Unable to parse expiry date for domain %s. Skipping.</error>', $r['domain_name']));
-        }
-        
-        if ($input->getOption('months'))
-        {
-          $reminder->modify(sprintf('-%d months', $input->getOption('months')));
-        }
-        if ($input->getOption('days'))
-        {
-          $reminder->modify(sprintf('-%d days', $input->getOption('days')));
-        }
-        if ($input->getOption('time'))
-        {
-          if (!preg_match('/^[0-2][0-9]:[0-5][0-9]$/', $input->getOption('time')))
-          {
-            $output->writeln('<error>Invalid reminder time given</error>');
-            exit;
-          }
-          
-          $reminder->modify(sprintf('%s', $input->getOption('time')));
-        }
-
-        
-        
-        $output->writeln(sprintf('Domain %s expires %s, setting reminder for %s', $r['domain_name'], $r['expires'], $reminder->format('Y-m-d H:i T')));
-        
-        
-        $event_data = array(
-          '{uid}'       => sprintf('uid%d@%s', $idx, $r['domain_name']),
-          '{dtstamp}'   => date_create()->format('Ymd\THis\Z'),
-          '{start}'     => $expiry->format('Ymd\THis\Z'),
-          '{end}'       => $expiry->format('Ymd\THis\Z'),
-          '{summary}'   => sprintf('Domain %s expires on %s', $r['domain_name'], $expiry->format('l jS F')),
-          '{reminder}'  => $reminder->format('Ymd\THis\Z'),
-        );
-        
-        $events[] = strtr($event_template, $event_data);
-      }
-      
-      $calendar = strtr($calendar_template, array('{events}' => join($events, PHP_EOL)));
+      $calendar = $app['domain_calendar']->generateCalendar($input->getOption('months'),$input->getOption('days'),$input->getOption('time'));
       
       $output->writeln('Saving calendar file');
       file_put_contents($input->getArgument('filename'), $calendar);
