@@ -15,6 +15,8 @@ Requirements
 Installation
 ------------
 
+**Note:** the easiest way to get started is to get the latest complete installation from the [download](https://github.com/inanimatt/Domain-Calendar/downloads) page on GitHub. These packages include all the required libraries and dependencies, but may be older than the current development version.
+
 This project uses Composer to track and manage project dependencies. However Composer doesn't yet handle the download of single files and archives, so there are a couple of additional steps required for now:
 
 * Download the [Silex](http://silex.sensiolabs.org/get/silex.phar) micro-framework and put it in the `vendor` directory
