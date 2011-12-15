@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Inanimatt\DomainCalendarException;
 
 
-$console = new Application('DomainCalendar', '1.0.0');
+$console = new Application('DomainCalendar', '1.0.1');
 
 $console->register('domain:add')
   ->setDefinition( array(
