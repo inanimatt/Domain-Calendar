@@ -61,7 +61,6 @@ You can quell all non-error output from the above commands by adding the `--quie
 TODO
 ----
 
-* Abstract command code into one or more services
 * Web UI?
 * Test suite!
 * Don't migrate DB schema automatically: throw an exception then provide a console command to display potential data-loss warning and handle migration (`./domain-calendar database:upgrade --force` -- also `database:dump`?)
