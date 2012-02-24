@@ -9,8 +9,8 @@
     "description" : "Generate an iCalendar file of domain name expiry dates.",
     "license" : "MIT",
     "require": {
-        "php": ">=5.3.0",
-        "doctrine/dbal": "2.1.*",
-        "symfony/console" : "2.1.*"
+        "php": ">=5.3.2",
+        "doctrine/dbal": "2.1.6",
+        "symfony/console" : "2.0.10"
     }
 }
