@@ -1,1 +1,31 @@
-[{"package":"twig\/twig","version":"1.4.0"},{"package":"symfony\/twig-bridge","version":"2.1.0-dev"},{"package":"doctrine\/common","version":"2.2.0BETA2"},{"package":"doctrine\/dbal","version":"2.1.x-dev"},{"package":"symfony\/console","version":"2.1.0-dev"}]
+{
+    "hash": "33b816c3b6585ae95318763cb857eb54",
+    "packages": [
+        {
+            "package": "doctrine/common",
+            "version": "dev-master",
+            "source-reference": "fc26d10d97dc773923a8d561e9301c3c73b9cc70"
+        },
+        {
+            "package": "doctrine/dbal",
+            "version": "2.1.x-dev",
+            "source-reference": "2.1.6"
+        },
+        {
+            "package": "symfony/console",
+            "version": "2.1.0-dev",
+            "source-reference": "eeea9fd51e2c47c01c77bef366a79f264706772c"
+        },
+        {
+            "package": "symfony/twig-bridge",
+            "version": "2.1.0-dev",
+            "source-reference": "37567d24fc80ea2b6e0028aebf18d0266557bfc4"
+        },
+        {
+            "package": "twig/twig",
+            "version": "dev-master",
+            "source-reference": "01f733f4b5407a7a2cc97f2b6dc269c8432da022"
+        }
+    ],
+    "aliases": []
+}
