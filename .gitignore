@@ -2,3 +2,4 @@ vendor/*
 
 src/domain_calendar.db
 data/domain_calendar.db
+composer.lock
