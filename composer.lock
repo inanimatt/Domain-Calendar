@@ -1,0 +1,22 @@
+{
+    "hash": "d830275ab3f1852d8b25cd4d7f170bf6",
+    "packages": [
+        {
+            "package": "doctrine/common",
+            "version": "2.2.1"
+        },
+        {
+            "package": "doctrine/dbal",
+            "version": "2.1.6"
+        },
+        {
+            "package": "silex",
+            "version": "1.0"
+        },
+        {
+            "package": "symfony/console",
+            "version": "v2.0.12"
+        }
+    ],
+    "aliases": []
+}

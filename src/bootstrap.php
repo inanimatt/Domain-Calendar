@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__.'/../vendor/silex.phar';
+require __DIR__.'/../vendor/silex/silex.phar';
 
 require __DIR__.'/../vendor/phpwhois/whois.main.php';
 

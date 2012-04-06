@@ -17,13 +17,13 @@ Installation
 
 **Note:** the easiest way to get started is to get the latest complete installation from the [download](https://github.com/inanimatt/Domain-Calendar/downloads) page on GitHub. These packages include all the required libraries and dependencies, but may be older than the current development version.
 
-This project uses Composer to track and manage project dependencies. However Composer doesn't yet handle the download of single files and archives, so there are a couple of additional steps required for now:
+This project requires Silex, the Symfony2 Console component, Doctrine DBAL, and PHPWhois. A Composer file is included to download and install the first three of these, unfortunately it doesn't yet support `tar.gz` files or CVS, so you'll have to download and install PHPWhois manually.
 
-* Download the [Silex](http://silex.sensiolabs.org/get/silex.phar) micro-framework and put it in the `vendor` directory
+* From the command line, run `curl -s http://getcomposer.org/installer | php` to download composer.
+* Run `php composer.phar install` to fetch Doctrine and Silex.
 * Download [PHPWhois](http://sourceforge.net/projects/phpwhois/files/phpwhois/) and unpack it into the `vendor/phpwhois` directory
-* Download the [Composer](http://getcomposer.org/composer.phar) package manager and put it in the `vendor` directory
 * Run `php vendor/composer.phar install`
-* Make sure the `data` directory is writeable by your username
+* Make sure the `data` directory is writeable by your user
 
 Usage
 -----
