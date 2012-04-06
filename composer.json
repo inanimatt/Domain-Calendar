@@ -3,11 +3,6 @@
     "version": "1.0.1",
     "description" : "Generate an iCalendar file of domain name expiry dates.",
     "license" : "MIT",
-    "source": {
-        "url": "git://github.com/inanimatt/Domain-Calendar.git",
-        "type": "git",
-        "reference": "8de75a1264ce6de7099afe10dbd83c28ff061c23"
-    },
     "repositories" : [
       {
         "type" : "package",
