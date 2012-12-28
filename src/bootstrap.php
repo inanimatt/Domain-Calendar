@@ -1,14 +1,10 @@
 <?php
 
-require __DIR__.'/../vendor/silex/silex.phar';
-
+require __DIR__.'/../vendor/autoload.php';
 require __DIR__.'/../vendor/phpwhois/whois.main.php';
 
 $app = new Silex\Application();
 $app['debug'] = true;
-
-$app['autoloader']->registerNamespace('Symfony', __DIR__ . '/../vendor/symfony/console');
-$app['autoloader']->registerNamespace('Inanimatt', __DIR__);
 
 /* Services */
 
