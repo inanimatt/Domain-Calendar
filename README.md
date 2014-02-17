@@ -1,3 +1,5 @@
+Note: don't use this, it's an unmaintained piece of crap. Or use it with that proviso. It does *technically* work.
+
 Domain Calendar
 ===============
 
